@@ -42,3 +42,8 @@ class Tokens:
     def __repr__(self):
         return (f"Tokens(red={self.red}, green={self.green}, blue={self.blue}, "
                 f"white={self.white}, black={self.black}, gold={self.gold})")
+
+    def repr_non_zero(self):
+        """Returns a string representation showing only non-zero token values."""
+        non_zero_tokens = {k: v for k, v in self.__dict__.items() if v > 0}
+        return f"Tokens({', '.join(f'{k}={v}' for k, v in non_zero_tokens.items())})"
