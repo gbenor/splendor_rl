@@ -16,8 +16,10 @@ class Card(ABC):
 
 @dataclass
 class Noble(Card):
-    def __init__(self):
-        super().__init__(cost=Tokens(), score=3)
+    def __init__(self, cost: Tokens = None):
+        if cost is None:
+            cost = Tokens()  # Default to an empty Tokens object if no cost is provided
+        super().__init__(cost=cost, score=3)
 
     def __repr__(self):
         return f"Noble(score={self.score})"
@@ -31,4 +33,3 @@ class EvaluationCard(Card):
     def __repr__(self):
         return (f"EvaluationCard(cost={self.cost.repr_non_zero()}, score={self.score}, "
                 f"level={self.level}, bonus={self.bonus.repr_non_zero()})")
-
