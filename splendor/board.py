@@ -1,6 +1,7 @@
 from typing import List
 
 from card import Noble, EvaluationCard
+from config import INITIAL_TOKEN
 from deck import NobleDeck, EvaluationDeck
 from tokens import Tokens
 
@@ -42,14 +43,7 @@ class Board:
         self.exposed_noble_cards = [
             self.noble_deck.get_card() for _ in range(num_of_players + 1)
         ]
-        self.tokens = Tokens(
-            red=7,
-            green=7,
-            blue=7,
-            white=7,
-            black=7,
-            gold=5,
-        )
+        self.tokens = INITIAL_TOKEN
 
     def take_evaluation_card(self, deck_index: int, card_index: int) -> EvaluationCard:
         # Take a card from the exposed cards of a specific deck
