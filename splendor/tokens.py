@@ -10,6 +10,18 @@ class Tokens:
     black: int = 0
     gold: int = 0  # Gold tokens are wildcards
 
+    def __eq__(self, other):
+        if not isinstance(other, Tokens):
+            return NotImplemented
+        return (
+            self.red == other.red
+            and self.green == other.green
+            and self.blue == other.blue
+            and self.white == other.white
+            and self.black == other.black
+            and self.gold == other.gold
+        )
+
     def __add__(self, other):
         if not isinstance(other, Tokens):
             return NotImplemented
@@ -19,7 +31,7 @@ class Tokens:
             blue=self.blue + other.blue,
             white=self.white + other.white,
             black=self.black + other.black,
-            gold=self.gold + other.gold
+            gold=self.gold + other.gold,
         )
 
     def __sub__(self, other):
@@ -31,7 +43,7 @@ class Tokens:
             blue=self.blue - other.blue,
             white=self.white - other.white,
             black=self.black - other.black,
-            gold=self.gold - other.gold
+            gold=self.gold - other.gold,
         )
 
     @property
@@ -40,8 +52,10 @@ class Tokens:
         return self.red + self.green + self.blue + self.white + self.black + self.gold
 
     def __repr__(self):
-        return (f"Tokens(red={self.red}, green={self.green}, blue={self.blue}, "
-                f"white={self.white}, black={self.black}, gold={self.gold})")
+        return (
+            f"Tokens(red={self.red}, green={self.green}, blue={self.blue}, "
+            f"white={self.white}, black={self.black}, gold={self.gold})"
+        )
 
     def repr_non_zero(self):
         """Returns a string representation showing only non-zero token values."""
