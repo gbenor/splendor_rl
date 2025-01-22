@@ -1,9 +1,6 @@
-import pytest
-import csv
-import random
+from card import Noble, EvaluationCard
 from deck import NobleDeck, EvaluationDeck
 from tokens import Tokens
-from card import Noble, EvaluationCard
 
 
 def test_noble_deck(random_csv_noble):
@@ -47,7 +44,9 @@ def test_evaluation_deck(random_csv_evaluation):
     assert isinstance(card, EvaluationCard)
     assert len(evaluation_deck.cards) == 14  # One card removed
 
-    bonus_dict = Tokens().__dict__.copy()  # Start with a clean copy of an empty Tokens object
+    bonus_dict = (
+        Tokens().__dict__.copy()
+    )  # Start with a clean copy of an empty Tokens object
     for card in evaluation_deck.cards:
         for key, value in card.bonus.__dict__.items():
             bonus_dict[key] += value  # Sum values for duplicate keys

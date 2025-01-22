@@ -1,6 +1,3 @@
-import csv
-import random
-from dataclasses import dataclass, field
 from typing import List
 
 from card import Noble, EvaluationCard
@@ -11,9 +8,15 @@ from tokens import Tokens
 class Board:
     def __init__(self):
         self.noble_deck: NobleDeck = NobleDeck()
-        self.evaluation_decks: List[EvaluationDeck] = [EvaluationDeck(i) for i in range(3)]
+        self.evaluation_decks: List[EvaluationDeck] = [
+            EvaluationDeck(i) for i in range(3)
+        ]
         self.tokens = Tokens()  # Initialize tokens
-        self.exposed_evaluation_cards: List[List[EvaluationCard]] = [[], [], []]  # 4 cards exposed for each deck
+        self.exposed_evaluation_cards: List[List[EvaluationCard]] = [
+            [],
+            [],
+            [],
+        ]  # 4 cards exposed for each deck
         self.exposed_noble_cards: List[Noble] = []
 
     def load_from_files(self, noble_file: str, evaluation_files: List[str]):
@@ -33,13 +36,19 @@ class Board:
 
     def start_new_board(self, num_of_players):
         # Reset and expose the top 4 cards of each evaluation deck
-        self.exposed_evaluation_cards = [[deck.get_card() for _ in range(4)] for deck in self.evaluation_decks]
-        self.exposed_noble_cards = [self.noble_deck.get_card() for _ in range(num_of_players + 1)]
+        self.exposed_evaluation_cards = [
+            [deck.get_card() for _ in range(4)] for deck in self.evaluation_decks
+        ]
+        self.exposed_noble_cards = [
+            self.noble_deck.get_card() for _ in range(num_of_players + 1)
+        ]
 
     def take_evaluation_card(self, deck_index: int, card_index: int) -> EvaluationCard:
         # Take a card from the exposed cards of a specific deck
         card = self.exposed_evaluation_cards[deck_index][card_index]
-        self.exposed_evaluation_cards[deck_index][card_index] = self.evaluation_decks[deck_index].get_card()
+        self.exposed_evaluation_cards[deck_index][card_index] = self.evaluation_decks[
+            deck_index
+        ].get_card()
         return card
 
     def take_noble_card(self, card_index: int) -> Noble:
