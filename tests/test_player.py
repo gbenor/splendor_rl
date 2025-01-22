@@ -180,3 +180,67 @@ def test_cant_buy_noble(player_with_tokens):
     player = player_with_tokens
     noble = Noble(cost=Tokens(blue=1))
     assert player.can_buy_noble_card(noble) is False
+
+
+def test_reserve_card_without_gold(mock_board, player_with_tokens):
+    """Test reserving a card without using gold."""
+    board = mock_board
+    player = player_with_tokens
+
+    board.start_new_board(4)
+
+    card_to_be_reserved = board.exposed_evaluation_cards[0][0]
+
+    # Reserve a card from deck 0 without gold
+    player.reserve_without_gold(board, deck_index=0, card_index=0)
+
+    # Assert that the card is now in the player's reserved cards
+    assert len(player.reserved_cards) == 1
+    assert player.reserved_cards[0] == card_to_be_reserved
+
+    # Assert the card is removed from the board
+    assert board.exposed_evaluation_cards[0][0] != card_to_be_reserved
+
+
+def test_reserve_card_with_gold(mock_board, player_with_tokens):
+    """Test reserving a card and receiving a gold token."""
+    board = mock_board
+    player = player_with_tokens
+
+    board.start_new_board(4)
+
+    card_to_be_reserved = board.exposed_evaluation_cards[0][0]
+
+    # Reserve a card from deck 0 without gold
+    player.reserve_with_gold(board, deck_index=0, card_index=0)
+
+    # Assert that the card is now in the player's reserved cards
+    assert len(player.reserved_cards) == 1
+    assert player.reserved_cards[0] == card_to_be_reserved
+
+    # Assert the player received a gold token
+    assert player.tokens.gold == 3
+    assert board.tokens.gold == 5 - 1
+
+
+def test_buy_reserved_card_success(mock_board, player_with_tokens):
+    """Test buying a reserved card successfully."""
+    board = mock_board
+    player = player_with_tokens
+
+    board.start_new_board(4)
+
+    card_to_be_reserved = board.exposed_evaluation_cards[0][0]
+    player.tokens = card_to_be_reserved.cost
+
+    # Reserve a card from deck 0 without gold
+    player.reserve_without_gold(board, deck_index=0, card_index=0)
+
+    # Buy the reserved card
+    player.buy_reserved_card(board, card_index=0)
+
+    # Assert the reserved card is removed from the player's reserved cards
+    assert len(player.reserved_cards) == 0
+
+    # Assert the card is added to the player's evaluation deck
+    assert len(player.evaluation_decks[0].cards) == 1

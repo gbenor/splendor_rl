@@ -12,6 +12,7 @@ class Player:
         self.evaluation_decks: List[EvaluationDeck] = [
             EvaluationDeck(i) for i in range(3)
         ]
+        self.reserved_cards: List[EvaluationCard] = []
         self.tokens = Tokens()  # Initialize tokens
 
     def get_withdrawal_options(self, board: Board) -> List[Tokens]:
@@ -155,3 +156,58 @@ class Player:
 
         card = board.take_noble_card(card_index)
         self.noble_deck.cards.append(card)
+
+    def can_reserve(self):
+        return len(self.reserved_cards) < 3
+
+    def can_reserve_with_gold(self, board: Board):
+        return self.can_reserve() and board.tokens.gold > 0
+
+    def reserve_without_gold(self, board: Board, deck_index: int, card_index: int):
+        if not self.can_reserve():
+            raise ValueError("Player cannot reserve a card.")
+        card = board.take_evaluation_card(deck_index, card_index)
+        self.reserved_cards.append(card)
+
+    def reserve_with_gold(self, board: Board, deck_index: int, card_index: int):
+        if not self.can_reserve_with_gold(board):
+            raise ValueError("Player cannot reserve a card.")
+        self.reserve_without_gold(board, deck_index, card_index)
+        transaction = Tokens(
+            gold=1,
+        )
+
+        self.tokens += transaction
+        board.tokens -= transaction
+
+    def buy_reserved_card(self, board: Board, card_index: int):
+        # Validate deck and card indices
+        if not (0 <= card_index < len(self.reserved_cards)):
+            raise ValueError("Invalid deck_index or card_index.")
+        card = self.reserved_cards[card_index]
+        if not card:
+            raise ValueError("No card at the specified index.")
+
+        # Check if the player can afford the card
+        if not self.can_buy_evaluation_card(card):
+            raise ValueError("Player cannot afford the evaluation card.")
+
+        # Calculate remaining cost and the tokens to use
+        remaining_cost = self._cost_after_bonus_usage(card)
+        gold_needed = self._wildcard_to_use(remaining_cost)
+        transaction = Tokens(
+            red=min(remaining_cost.red, self.tokens.red),
+            green=min(remaining_cost.green, self.tokens.green),
+            blue=min(remaining_cost.blue, self.tokens.blue),
+            white=min(remaining_cost.white, self.tokens.white),
+            black=min(remaining_cost.black, self.tokens.black),
+            gold=gold_needed,
+        )
+
+        # Deduct tokens from the player and return to the board
+        self.tokens -= transaction
+        board.tokens += transaction
+
+        # Take the card and add it to the player's deck
+        card = self.reserved_cards.pop(card_index)
+        self.evaluation_decks[card.level - 1].cards.append(card)
