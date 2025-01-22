@@ -180,3 +180,93 @@ def test_cant_buy_noble(player_with_tokens):
     player = player_with_tokens
     noble = Noble(cost=Tokens(blue=1))
     assert player.can_buy_noble_card(noble) is False
+
+
+def test_reserve_card_without_gold(mock_board, player_with_tokens):
+    """Test reserving a card without using gold."""
+    board = mock_board
+    player = player_with_tokens
+
+    # Reserve a card from deck 0 without gold
+    player.reserve_without_gold(board, deck_index=0, card_index=0)
+
+    # Assert that the card is now in the player's reserved cards
+    assert len(player.reserved_cards) == 1
+    assert player.reserved_cards[0] == board.exposed_evaluation_cards[0][0]
+
+    # Assert the card is removed from the board
+    assert board.exposed_evaluation_cards[0][0] is None
+
+
+def test_reserve_card_with_gold(mock_board, player_with_tokens):
+    """Test reserving a card and receiving a gold token."""
+    board = setup_board
+    player = setup_player
+
+    # Reserve a card from deck 1 with gold
+    player.reserve_with_gold(board, deck_index=1, card_index=1)
+
+    # Assert that the card is now in the player's reserved cards
+    assert len(player.reserved_cards) == 1
+    assert player.reserved_cards[0] == board.exposed_evaluation_cards[1][1]
+
+    # Assert the card is removed from the board
+    assert board.exposed_evaluation_cards[1][1] is None
+
+    # Assert the player received a gold token
+    assert player.tokens.gold == 3
+    assert board.tokens.gold == 2
+
+
+#
+# def test_buy_reserved_card_success(setup_board, setup_player):
+#     """Test buying a reserved card successfully."""
+#     board = setup_board
+#     player = setup_player
+#
+#     # Reserve a card
+#     player.reserve_with_gold(board, deck_index=0, card_index=0)
+#
+#     # Buy the reserved card
+#     player.buy_reserved_card(board, card_index=0)
+#
+#     # Assert the reserved card is removed from the player's reserved cards
+#     assert len(player.reserved_cards) == 0
+#
+#     # Assert the card is added to the player's evaluation deck
+#     assert len(player.evaluation_decks[0].cards) == 1
+#     assert player.evaluation_decks[0].cards[0].cost == Tokens(red=2, green=2, blue=0)
+#
+#     # Assert tokens were deducted correctly
+#     assert player.tokens.red == 1  # Player initially had 3 red tokens
+#     assert player.tokens.green == 1  # Player initially had 3 green tokens
+#     assert player.tokens.blue == 1  # Player initially had 1 blue token
+#     assert player.tokens.gold == 2  # Gold token usage should be validated
+#
+#
+# def test_buy_reserved_card_insufficient_tokens(setup_board, setup_player):
+#     """Test buying a reserved card fails when the player doesn't have enough tokens."""
+#     board = setup_board
+#     player = setup_player
+#
+#     # Reserve a card
+#     player.reserve_with_gold(board, deck_index=1, card_index=1)
+#
+#     # Modify player's tokens to make the purchase impossible
+#     player.tokens = Tokens(red=1, green=1, blue=0, gold=0)
+#
+#     with pytest.raises(ValueError, match="Player cannot afford the evaluation card."):
+#         player.buy_reserved_card(board, card_index=0)
+#
+#
+# def test_buy_reserved_card_invalid_index(setup_board, setup_player):
+#     """Test buying a reserved card fails with an invalid index."""
+#     board = setup_board
+#     player = setup_player
+#
+#     # Reserve a card
+#     player.reserve_with_gold(board, deck_index=0, card_index=0)
+#
+#     # Try buying a card with an invalid index
+#     with pytest.raises(ValueError, match="Invalid deck_index or card_index."):
+#         player.buy_reserved_card(board, card_index=1)
