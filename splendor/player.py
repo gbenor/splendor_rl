@@ -2,6 +2,7 @@ from typing import List
 
 from board import Board
 from card import Card, EvaluationCard, Noble
+from config import MAX_RESERVED_CARDS
 from deck import NobleDeck, EvaluationDeck
 from tokens import Tokens
 
@@ -122,21 +123,8 @@ class Player:
         if not self.can_buy_evaluation_card(card):
             raise ValueError("Player cannot afford the evaluation card.")
 
-        # Calculate remaining cost and the tokens to use
-        remaining_cost = self._cost_after_bonus_usage(card)
-        gold_needed = self._wildcard_to_use(remaining_cost)
-        transaction = Tokens(
-            red=min(remaining_cost.red, self.tokens.red),
-            green=min(remaining_cost.green, self.tokens.green),
-            blue=min(remaining_cost.blue, self.tokens.blue),
-            white=min(remaining_cost.white, self.tokens.white),
-            black=min(remaining_cost.black, self.tokens.black),
-            gold=gold_needed,
-        )
-
-        # Deduct tokens from the player and return to the board
-        self.tokens -= transaction
-        board.tokens += transaction
+        # buy the card
+        self._buy_card_helper(board, card)
 
         # Take the card and add it to the player's deck
         card = board.take_evaluation_card(deck_index, card_index)
@@ -158,7 +146,7 @@ class Player:
         self.noble_deck.cards.append(card)
 
     def can_reserve(self):
-        return len(self.reserved_cards) < 3
+        return len(self.reserved_cards) < MAX_RESERVED_CARDS
 
     def can_reserve_with_gold(self, board: Board):
         return self.can_reserve() and board.tokens.gold > 0
@@ -190,8 +178,16 @@ class Player:
 
         # Check if the player can afford the card
         if not self.can_buy_evaluation_card(card):
-            raise ValueError("Player cannot afford the evaluation card.")
+            raise ValueError("Player cannot afford the reserved card.")
 
+        # buy the card
+        self._buy_card_helper(board, card)
+
+        # Take the card and add it to the player's deck
+        card = self.reserved_cards.pop(card_index)
+        self.evaluation_decks[card.level - 1].cards.append(card)
+
+    def _buy_card_helper(self, board: Board, card: EvaluationCard):
         # Calculate remaining cost and the tokens to use
         remaining_cost = self._cost_after_bonus_usage(card)
         gold_needed = self._wildcard_to_use(remaining_cost)
@@ -207,7 +203,3 @@ class Player:
         # Deduct tokens from the player and return to the board
         self.tokens -= transaction
         board.tokens += transaction
-
-        # Take the card and add it to the player's deck
-        card = self.reserved_cards.pop(card_index)
-        self.evaluation_decks[card.level - 1].cards.append(card)
