@@ -4,6 +4,9 @@ import random
 import pytest
 
 from board import Board
+from card import EvaluationCard
+from player import Player
+from tokens import Tokens
 
 
 @pytest.fixture
@@ -72,3 +75,32 @@ def mock_board(random_csv_noble, random_csv_evaluation):
         [random_csv_evaluation, random_csv_evaluation, random_csv_evaluation],
     )
     return board
+
+
+@pytest.fixture
+def player_with_tokens():
+    """Fixture to create a player with tokens and bonuses."""
+    player = Player()
+    player.tokens = Tokens(red=2, green=3, blue=1, gold=2)  # Player tokens
+    player.evaluation_decks[0].cards.append(
+        EvaluationCard(
+            cost=Tokens(),
+            score=0,
+            bonus=Tokens(red=1),
+        )
+    )
+    player.evaluation_decks[1].cards.append(
+        EvaluationCard(cost=Tokens(), score=0, bonus=Tokens(white=1))
+    )
+
+    return player
+
+
+@pytest.fixture
+def evaluation_card():
+    """Fixture to create a sample evaluation card."""
+    return EvaluationCard(
+        cost=Tokens(red=3, green=3, blue=2, white=0, black=0),
+        score=3,
+        bonus=Tokens(blue=1),
+    )

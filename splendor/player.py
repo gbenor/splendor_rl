@@ -1,6 +1,7 @@
 from typing import List
 
 from board import Board
+from card import Card, EvaluationCard, Noble
 from deck import NobleDeck, EvaluationDeck
 from tokens import Tokens
 
@@ -57,3 +58,51 @@ class Player:
         from itertools import combinations
 
         return list(combinations(colors, count))
+
+    def _bonuses(self) -> Tokens:
+        return sum((deck.bonus for deck in self.evaluation_decks), Tokens())
+
+    def _cost_after_bonus_usage(self, card: Card) -> Tokens:
+        bonuses = self._bonuses()
+        return Tokens(
+            red=max(0, card.cost.red - bonuses.red),
+            green=max(0, card.cost.green - bonuses.green),
+            blue=max(0, card.cost.blue - bonuses.blue),
+            white=max(0, card.cost.white - bonuses.white),
+            black=max(0, card.cost.black - bonuses.black),
+        )
+
+    def _wildcard_to_use(self, cost: Tokens) -> int:
+        remaining_cost = Tokens(
+            red=max(0, cost.red - self.tokens.red),
+            green=max(0, cost.green - self.tokens.green),
+            blue=max(0, cost.blue - self.tokens.blue),
+            white=max(0, cost.white - self.tokens.white),
+            black=max(0, cost.black - self.tokens.black),
+        )
+
+        total_shortage = (
+            remaining_cost.red
+            + remaining_cost.green
+            + remaining_cost.blue
+            + remaining_cost.white
+            + remaining_cost.black
+        )
+        return total_shortage
+
+    def can_buy_evaluation_card(self, card: EvaluationCard) -> bool:
+        """
+        Check if the player can buy an evaluation card based on their tokens and bonuses.
+        """
+        # Calculate the cost after applying bonuses
+        remaining_cost = self._cost_after_bonus_usage(card)
+        gold_needed = self._wildcard_to_use(remaining_cost)
+        return self.tokens.gold >= gold_needed
+
+    def can_buy_noble_card(self, card: Noble) -> bool:
+        """
+        Check if the player can buy a Noble card based on their bonuses.
+        """
+        # Calculate the cost after applying bonuses
+        remaining_cost = self._cost_after_bonus_usage(card)
+        return remaining_cost == Tokens()

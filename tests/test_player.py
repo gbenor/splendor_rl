@@ -1,5 +1,6 @@
 import pytest
 from board import Board
+from card import Noble
 from tokens import Tokens
 from player import Player
 
@@ -110,3 +111,72 @@ def test_withdraw_mixed_options(setup_board):
 
     for option in expected:
         assert option in options, f"Expected withdrawal option {option} is missing."
+
+
+def test_can_buy_with_sufficient_tokens_and_bonuses(
+    player_with_tokens, evaluation_card
+):
+    """Test if the player can buy a card when they have sufficient tokens and bonuses."""
+    player = player_with_tokens
+    card = evaluation_card
+
+    # Player has enough tokens and bonuses to buy the card
+    assert player.can_buy_evaluation_card(card) is True
+
+
+def test_cannot_buy_due_to_insufficient_tokens(player_with_tokens, evaluation_card):
+    """Test if the player cannot buy a card due to insufficient tokens."""
+    player = player_with_tokens
+    card = evaluation_card
+
+    # Reduce player's tokens to make them insufficient
+    player.tokens = Tokens(red=1, green=1, blue=0, gold=0)
+
+    assert player.can_buy_evaluation_card(card) is False
+
+
+def test_can_buy_with_wildcards(player_with_tokens, evaluation_card):
+    """Test if the player can buy a card using wildcards (gold tokens)."""
+    player = player_with_tokens
+    card = evaluation_card
+
+    # Player has 2 gold tokens to cover any shortages
+    player.tokens = Tokens(red=1, green=2, blue=0, gold=4)
+
+    assert player.can_buy_evaluation_card(card) is True
+
+
+def test_cannot_buy_when_short_on_gold(player_with_tokens, evaluation_card):
+    """Test if the player cannot buy a card when they don't have enough wildcards (gold)."""
+    player = player_with_tokens
+    card = evaluation_card
+
+    # Player has a shortage but only 1 gold token
+    player.tokens = Tokens(red=1, green=2, blue=0, gold=1)
+
+    assert player.can_buy_evaluation_card(card) is False
+
+
+def test_can_buy_with_exact_tokens_and_bonuses(player_with_tokens, evaluation_card):
+    """Test if the player can buy a card with exactly enough tokens and bonuses."""
+    player = player_with_tokens
+    card = evaluation_card
+
+    # Adjust tokens and bonuses to exactly match the cost
+    player.tokens = Tokens(red=2, green=3, blue=2, gold=0)
+
+    assert player.can_buy_evaluation_card(card) is True
+
+
+def test_can_buy_noble(player_with_tokens):
+    """Test if the player can buy a card with exactly enough tokens and bonuses."""
+    player = player_with_tokens
+    noble = Noble(cost=Tokens(red=1))
+    assert player.can_buy_noble_card(noble) is True
+
+
+def test_cant_buy_noble(player_with_tokens):
+    """Test if the player can buy a card with exactly enough tokens and bonuses."""
+    player = player_with_tokens
+    noble = Noble(cost=Tokens(blue=1))
+    assert player.can_buy_noble_card(noble) is False
