@@ -106,3 +106,52 @@ class Player:
         # Calculate the cost after applying bonuses
         remaining_cost = self._cost_after_bonus_usage(card)
         return remaining_cost == Tokens()
+
+    def buy_evaluation_card(self, board: Board, deck_index: int, card_index: int):
+        # Validate deck and card indices
+        if not (0 <= deck_index < len(board.exposed_evaluation_cards)) or not (
+            0 <= card_index < len(board.exposed_evaluation_cards[deck_index])
+        ):
+            raise ValueError("Invalid deck_index or card_index.")
+        card = board.exposed_evaluation_cards[deck_index][card_index]
+        if not card:
+            raise ValueError("No card at the specified index.")
+
+        # Check if the player can afford the card
+        if not self.can_buy_evaluation_card(card):
+            raise ValueError("Player cannot afford the evaluation card.")
+
+        # Calculate remaining cost and the tokens to use
+        remaining_cost = self._cost_after_bonus_usage(card)
+        gold_needed = self._wildcard_to_use(remaining_cost)
+        transaction = Tokens(
+            red=min(remaining_cost.red, self.tokens.red),
+            green=min(remaining_cost.green, self.tokens.green),
+            blue=min(remaining_cost.blue, self.tokens.blue),
+            white=min(remaining_cost.white, self.tokens.white),
+            black=min(remaining_cost.black, self.tokens.black),
+            gold=gold_needed,
+        )
+
+        # Deduct tokens from the player and return to the board
+        self.tokens -= transaction
+        board.tokens += transaction
+
+        # Take the card and add it to the player's deck
+        card = board.take_evaluation_card(deck_index, card_index)
+        self.evaluation_decks[deck_index].cards.append(card)
+
+    def buy_noble_card(self, board: Board, card_index: int):
+        # Validate deck and card indices
+        if not (0 <= card_index < len(board.exposed_noble_cards)):
+            raise ValueError("Invalid card_index.")
+        card = board.exposed_noble_cards[card_index]
+        if not card:
+            raise ValueError("No card at the specified index.")
+
+        # Check if the player can afford the card
+        if not self.can_buy_noble_card(card):
+            raise ValueError("Player cannot afford the noble card.")
+
+        card = board.take_noble_card(card_index)
+        self.noble_deck.cards.append(card)
