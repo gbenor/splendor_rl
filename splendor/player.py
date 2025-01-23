@@ -101,6 +101,19 @@ class Player:
         gold_needed = self._wildcard_to_use(remaining_cost)
         return self.tokens.gold >= gold_needed
 
+    def evaluation_buying_options(self, board) -> List[EvaluationCard]:
+        options: List[EvaluationCard] = []
+        for deck in board.exposed_evaluation_cards:
+            for card in deck.cards:
+                if self.can_buy_evaluation_card(card):
+                    options.append(card)
+        return options
+
+    def noble_buying_options(self, board) -> List[Noble]:
+        return [
+            card for card in board.exposed_noble_cards if self.can_buy_noble_card(card)
+        ]
+
     def can_buy_noble_card(self, card: Noble) -> bool:
         """
         Check if the player can buy a Noble card based on their bonuses.
