@@ -54,6 +54,10 @@ class Player:
 
         return options
 
+    def withdrawal(self, board: Board, tokens: Tokens):
+        self.tokens += tokens
+        board.tokens -= tokens
+
     @staticmethod
     def _get_combinations(colors, count):
         """Helper function to get combinations of colors."""
