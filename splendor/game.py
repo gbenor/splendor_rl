@@ -1,5 +1,4 @@
 from typing import List
-
 from board import Board
 from config import SCORE_TO_WIN
 from player import Player
@@ -7,7 +6,7 @@ from player import Player
 
 class Game:
     def __init__(self):
-        self.board: Board = None
+        self.board: Board = Board()
         self.players: List[Player] = []
         self.max_rounds = None
         self.num_of_players = None
@@ -33,7 +32,7 @@ class Game:
         self.current_player_id: int = 0
         self.board.shuffle()
         self.board.start_new_board(num_of_players=self.num_of_players)
-        self.num_of_players = [Player() for _ in range(self.num_of_players)]
+        self.players = [Player() for _ in range(self.num_of_players)]
 
     def max_score(self):
         return max(player.score for player in self.players)
@@ -46,7 +45,7 @@ class Game:
 
     def get_options_for_current_player_id(self):
         player = self.players[self.current_player_id]
-        return {
+        options = {
             "withdrawal": player.get_withdrawal_options(self.board),
             "buy_evaluation": player.get_buy_evaluation_options(self.board),
             "buy_reserved": player.get_buy_reserved_options(),
@@ -59,7 +58,7 @@ class Game:
     def finalize_turn(self):
         player = self.players[self.current_player_id]
 
-        # for simplicity, but the first noble if possible
+        # Handle noble purchase if possible
         noble_buying_options = player.noble_buying_options(self.board)
         if noble_buying_options:
             player.buy_noble_card(
@@ -67,7 +66,7 @@ class Game:
                 self.board.exposed_noble_cards.index(noble_buying_options[0]),
             )
 
-        # advanced player id and num of turns
+        # Advance player turn and rounds
         if self.current_player_id == self.num_of_players - 1:
             self.rounds += 1
         self.current_player_id = (self.current_player_id + 1) % self.num_of_players
