@@ -2,7 +2,7 @@ from typing import List
 
 from board import Board
 from card import Card, EvaluationCard, Noble
-from config import MAX_RESERVED_CARDS
+from config import MAX_RESERVED_CARDS, MAX_TOKENS_PER_PLAYER
 from deck import NobleDeck, EvaluationDeck
 from tokens import Tokens
 
@@ -26,7 +26,7 @@ class Player:
         options: List[Tokens] = [Tokens()]
 
         # Rule 1: Ensure no more than 10 tokens after withdrawal
-        max_withdrawal = 10 - self.tokens.count
+        max_withdrawal = MAX_TOKENS_PER_PLAYER - self.tokens.count
         if max_withdrawal <= 0:
             return options  # No options if the player already has 10 or more tokens
 
@@ -53,6 +53,10 @@ class Player:
                     options.append(option)
 
         return options
+
+    def withdrawal(self, board: Board, tokens: Tokens):
+        self.tokens += tokens
+        board.tokens -= tokens
 
     @staticmethod
     def _get_combinations(colors, count):
@@ -162,7 +166,11 @@ class Player:
         return len(self.reserved_cards) < MAX_RESERVED_CARDS
 
     def can_reserve_with_gold(self, board: Board):
-        return self.can_reserve() and board.tokens.gold > 0
+        return (
+            self.can_reserve()
+            and board.tokens.gold > 0
+            and self.tokens.count < MAX_TOKENS_PER_PLAYER
+        )
 
     def reserve_without_gold(self, board: Board, deck_index: int, card_index: int):
         if not self.can_reserve():
@@ -216,3 +224,32 @@ class Player:
         # Deduct tokens from the player and return to the board
         self.tokens -= transaction
         board.tokens += transaction
+
+    @property
+    def score(self) -> int:
+        return self.noble_deck.score + sum(deck for deck in self.evaluation_decks)
+
+    def get_buy_evaluation_options(self, board: Board) -> List[EvaluationCard]:
+        result: List[EvaluationCard] = []
+        for deck in board.exposed_evaluation_cards:
+            result.extend([card for card in deck if self.can_buy_evaluation_card(card)])
+        return result
+
+    def get_buy_reserved_options(self) -> List[EvaluationCard]:
+        return [
+            card for card in self.reserved_cards if self.can_buy_evaluation_card(card)
+        ]
+
+    def get_reserved_without_gold_options(self, board: Board) -> List[EvaluationCard]:
+        if not self.can_reserve():
+            return []
+
+        result: List[EvaluationCard] = []
+        for deck in board.exposed_evaluation_cards:
+            result.extend([card for card in deck])
+        return result
+
+    def get_reserved_with_gold_options(self, board: Board) -> List[EvaluationCard]:
+        if not self.can_reserve_with_gold(board):
+            return []
+        return self.get_reserved_without_gold_options(board)
